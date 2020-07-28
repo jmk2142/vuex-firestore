@@ -1,57 +1,43 @@
-import Vue from 'vue'
-import Vuex from 'vuex'
+import Vue from "vue";
+import Vuex from "vuex";
+import { vuexfireMutations, firestoreAction } from "vuexfire";
+import { db } from "@/fire";
 
 Vue.use(Vuex)
 
 export default new Vuex.Store({
   state: {
-    user: {
-      displayName: "Jin Kuwata",
-      email:"jmk2142@tc.columbia.edu",
-      age: 21
-    },
-    hobbies: ["code","karate","cooking"],
-    todos: [
-      { id: 1, text: '...', done: true },
-      { id: 2, text: '...', done: false },
-      { id: 3, text: '...', done: true },
-      { id: 4, text: '...', done: false }
-    ]
+    user: null,
+    todos: []
   },
   mutations: {
-    INCREMENT_AGE(state, payload) {
-      state.user.age += payload;
+    SET_USER(state, user) {
+      state.user = user;
     },
-    DECREMENT_AGE(state) {
-      state.user.age--;
+    UNSET_USER(state) {
+      state.user = null;
     },
-    UPDATE_EMAIL(state, payload) {
-      state.user.email = payload;
-    }
+    ...vuexfireMutations
   },
   actions: {
-    changeEmail({commit}, payload) {
-      commit('UPDATE_EMAIL', payload);
-    }
+    signIn({ commit }, user) {
+      commit("SET_USER", user);
+    },
+    signOut({ commit }) {
+      commit("UNSET_USER");
+    },
+    bindTodos: firestoreAction(({ bindFirestoreRef }) => {
+      return bindFirestoreRef('todos', db.collection('todos'));
+    }),
+    unbindTodos: firestoreAction(({ unbindFirestoreRef }) => {
+      return unbindFirestoreRef('todos');
+    })
   },
   modules: {
   },
   getters: {
-    hobbiesLength: state => {
-      return state.hobbies.length;
-    },
-    doneTodos: (state) => {
-      return state.todos.filter(todo => todo.done)
-    },
-    doneTodosLength: (state, getters) => {
-      return getters.doneTodos.length;
-    },
-    activeCount: (state, getters) => {
-      return state.todos.length - getters.doneTodos.length
-    },
-    // getEventById: (state) => (id) => {
-    //   return something;
-    // }
-
+    todosCount: state => {
+      return state.todos.length;
+    }
   }
 })
